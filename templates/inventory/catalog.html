@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог{% endblock %}
+
+{% block content %}
+<!-- Заголовок -->
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-12">
+        <h1 class="fw-bold">
+            <i class="bi bi-grid"></i> Каталог инвентаря
+        </h1>
+        <p class="text-muted">Найдено товаров: {{ equipment_list.count }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Левая колонка - Фильтры -->
+    <div class="col-lg-3 mb-4">
+        <div class="card shadow-sm" data-aos="fade-right">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-funnel"></i> Фильтры</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'inventory:catalog' %}">
+                    <!-- Поиск -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-search"></i> Поиск
+                        </label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Название, бренд..." 
+                               value="{{ search_query }}">
+                    </div>
+                    
+                    <!-- Категории -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-tag"></i> Категория
+                        </label>
+                        <select name="category" class="form-select">
+                            <option value="">Все категории</option>
+                            {% for category in categories %}
+                                <option value="{{ category.slug }}" 
+                                        {% if selected_category.slug == category.slug %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Цена -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-cash"></i> Цена за день
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" name="min_price" class="form-control" 
+                                       placeholder="От" value="{{ request.GET.min_price }}">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="max_price" class="form-control" 
+                                       placeholder="До" value="{{ request.GET.max_price }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Состояние -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-star"></i> Состояние
+                        </label>
+                        <select name="condition" class="form-select">
+                            <option value="">Любое</option>
+                            {% for value, label in conditions %}
+                                <option value="{{ value }}" 
+                                        {% if request.GET.condition == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Доступность -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-check-circle"></i> Доступность
+                        </label>
+                        <select name="availability" class="form-select">
+                            <option value="">Все</option>
+                            <option value="available" {% if request.GET.availability == 'available' %}selected{% endif %}>
+                                В наличии
+                            </option>
+                            <option value="unavailable" {% if request.GET.availability == 'unavailable' %}selected{% endif %}>
+                                Нет в наличии
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-check"></i> Применить
+                    </button>
+                    <a href="{% url 'inventory:catalog' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x"></i> Сбросить
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Правая колонка - Товары -->
+    <div class="col-lg-9">
+        <!-- Сортировка -->
+        <div class="card shadow-sm mb-4" data-aos="fade-left">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="mb-md-0">
+                            <i class="bi bi-sort-down"></i> Сортировка:
+                        </h6>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="get" action="{% url 'inventory:catalog' %}" id="sortForm">
+                            <!-- Сохраняем параметры фильтров -->
+                            {% if search_query %}
+                                <input type="hidden" name="search" value="{{ search_query }}">
+                            {% endif %}
+                            {% if selected_category %}
+                                <input type="hidden" name="category" value="{{ selected_category.slug }}">
+                            {% endif %}
+                            
+                            <select name="sort" class="form-select" onchange="document.getElementById('sortForm').submit()">
+                                <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>
+                                    Сначала новые
+                                </option>
+                                <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>
+                                    Сначала старые
+                                </option>
+                                <option value="price_per_day" {% if sort_by == 'price_per_day' %}selected{% endif %}>
+                                    Цена: по возрастанию
+                                </option>
+                                <option value="-price_per_day" {% if sort_by == '-price_per_day' %}selected{% endif %}>
+                                    Цена: по убыванию
+                                </option>
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>
+                                    Название: А-Я
+                                </option>
+                                <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>
+                                    Название: Я-А
+                                </option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Список товаров -->
+        {% if equipment_list %}
+            <div class="row">
+                {% for equipment in equipment_list %}
+                    <div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:50 }}">
+                        <div class="card h-100 shadow-sm">
+                            {% if equipment.image %}
+                                <img src="{{ equipment.image.url }}" class="card-img-top" 
+                                     alt="{{ equipment.name }}" 
+                                     style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <span class="badge bg-primary mb-2 align-self-start">
+                                    {{ equipment.category.name }}
+                                </span>
+                                
+                                <h5 class="card-title">{{ equipment.name }}</h5>
+                                
+                                <p class="card-text text-muted small flex-grow-1">
+                                    {{ equipment.description|truncatewords:15 }}
+                                </p>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-rulers"></i> Размер: {{ equipment.size }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-star"></i> {{ equipment.get_condition_display }}
+                                    </small>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h4 class="text-primary mb-0">
+                                        {{ equipment.price_per_day }} ₽
+                                        <small class="text-muted" style="font-size: 0.6em;">/день</small>
+                                    </h4>
+                                    
+                                    {% if equipment.is_available %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Доступно
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle"></i> Нет в наличии
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <a href="{% url 'inventory:equipment_detail' equipment.slug %}" 
+                                   class="btn btn-primary w-100 mt-3">
+                                    <i class="bi bi-eye"></i> Подробнее
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center" data-aos="fade-up">
+                <i class="bi bi-info-circle" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Товары не найдены</h4>
+                <p>Попробуйте изменить параметры фильтрации</p>
+                <a href="{% url 'inventory:catalog' %}" class="btn btn-primary">
+                    Сбросить фильтры
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

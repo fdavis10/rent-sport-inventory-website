@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-12">
+        <h1 class="fw-bold">
+            <i class="bi bi-cart"></i> Корзина
+        </h1>
+    </div>
+</div>
+
+{% if cart_items %}
+<div class="row">
+
+    <div class="col-lg-8 mb-4">
+        {% for item in cart_items %}
+        <div class="card mb-3 shadow-sm" data-aos="fade-right" data-aos-delay="{{ forloop.counter0|add:50 }}">
+            <div class="card-body">
+                <div class="row align-items-center">
+
+                    <div class="col-md-2">
+                        {% if item.equipment.image %}
+                            <img src="{{ item.equipment.image.url }}" 
+                                 class="img-fluid rounded" 
+                                 alt="{{ item.equipment.name }}"
+                                 style="max-height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                                <i class="bi bi-image text-muted fs-2"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+   
+                    <div class="col-md-4">
+                        <h5 class="mb-1">
+                            <a href="{% url 'inventory:equipment_detail' item.equipment.slug %}" 
+                               class="text-decoration-none">
+                                {{ item.equipment.name }}
+                            </a>
+                        </h5>
+                        <p class="text-muted small mb-1">{{ item.equipment.category.name }}</p>
+                        <p class="mb-0">
+                            <strong>{{ item.equipment.price_per_day }} ₽</strong>/день
+                        </p>
+                    </div>
+
+                    <!-- Даты -->
+                    <div class="col-md-3">
+                        <p class="mb-1">
+                            <i class="bi bi-calendar-check"></i> 
+                            <strong>С:</strong> {{ item.start_date|date:"d.m.Y" }}
+                        </p>
+                        <p class="mb-1">
+                            <i class="bi bi-calendar-x"></i> 
+                            <strong>До:</strong> {{ item.end_date|date:"d.m.Y" }}
+                        </p>
+                        <p class="mb-0 text-primary">
+                            <i class="bi bi-clock"></i> {{ item.days }} дн.
+                        </p>
+                    </div>
+
+
+                    <div class="col-md-2">
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Кол-во:</label>
+                            <input type="number" 
+                                   class="form-control form-control-sm quantity-input" 
+                                   value="{{ item.quantity }}" 
+                                   min="1" 
+                                   max="{{ item.equipment.quantity_available }}"
+                                   data-item-id="{{ item.id }}">
+                        </div>
+                        <p class="mb-0 fw-bold text-primary">{{ item.subtotal }} ₽</p>
+                    </div>
+
+                    <!-- Удалить -->
+                    <div class="col-md-1">
+                        <a href="{% url 'rentals:remove_from_cart' item.id %}" 
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Удалить товар из корзины?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <div class="col-lg-4">
+        <div class="card shadow sticky-top" style="top: 20px;" data-aos="fade-left">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-receipt"></i> Итого
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Товаров:</span>
+                    <strong id="totalItems">{{ cart.total_items }}</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <h5 class="mb-0">К оплате:</h5>
+                    <h5 class="mb-0 text-primary" id="totalPrice">{{ cart.total_price }} ₽</h5>
+                </div>
+
+                <a href="{% url 'rentals:checkout' %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-credit-card"></i> Оформить заказ
+                </a>
+                <a href="{% url 'inventory:catalog' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left"></i> Продолжить покупки
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow text-center py-5" data-aos="fade-up">
+            <div class="card-body">
+                <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+                <h3 class="mt-4 mb-3">Корзина пуста</h3>
+                <p class="text-muted mb-4">Добавьте товары из каталога</p>
+                <a href="{% url 'inventory:catalog' %}" class="btn btn-primary">
+                    <i class="bi bi-grid"></i> Перейти в каталог
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const itemId = this.dataset.itemId;
+            const quantity = this.value;
+
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            formData.append('quantity', quantity);
+
+            fetch(`/rentals/update-cart-item/${itemId}/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalPrice').textContent = data.cart_total + ' ₽';
+                    document.getElementById('totalItems').textContent = data.cart_items_count;
+                    
+                    location.reload();
+                } else {
+                    alert(data.message);
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

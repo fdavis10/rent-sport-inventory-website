@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная - Аренда спортивного инвентаря{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-5" data-aos="fade-up">
+    <div class="col-12 text-center">
+        <h1 class="display-3 fw-bold mb-4" style="color: var(--primary-color);">
+            <i class="bi bi-snow"></i> Аренда спортивного инвентаря
+        </h1>
+        <p class="lead text-muted mb-4">
+            Лыжи, сноуборды, коньки и многое другое для вашего активного отдыха
+        </p>
+        <a href="{% url 'inventory:catalog' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-grid"></i> Смотреть каталог
+        </a>
+    </div>
+</div>
+
+<!-- Категории -->
+<div class="row mb-5">
+    <div class="col-12 text-center mb-4" data-aos="fade-up">
+        <h2 class="fw-bold">Популярные категории</h2>
+        <p class="text-muted">Выберите категорию инвентаря</p>
+    </div>
+    
+    {% for category in categories %}
+    <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+        <a href="{% url 'inventory:catalog' %}?category={{ category.slug }}" class="text-decoration-none">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="display-4 mb-3" style="color: var(--primary-color);">
+                        {% if 'лыжи' in category.name|lower %}
+                            <i class="bi bi-snow"></i>
+                        {% elif 'сноуборд' in category.name|lower %}
+                            <i class="bi bi-snow2"></i>
+                        {% elif 'конь' in category.name|lower %}
+                            <i class="bi bi-grid-3x3"></i>
+                        {% else %}
+                            <i class="bi bi-cart"></i>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ category.name }}</h5>
+                    <p class="card-text text-muted small">{{ category.equipment.count }} товаров</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Преимущества -->
+<div class="row mb-5">
+    <div class="col-12 text-center mb-4" data-aos="fade-up">
+        <h2 class="fw-bold">Почему мы?</h2>
+    </div>
+    
+    <div class="col-md-4 mb-4" data-aos="fade-right">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-3" style="color: var(--primary-color);">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <h5 class="card-title">Качественный инвентарь</h5>
+                <p class="card-text text-muted">Только проверенное оборудование от известных брендов</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4" data-aos="fade-up">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-3" style="color: var(--primary-color);">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <h5 class="card-title">Доступные цены</h5>
+                <p class="card-text text-muted">Гибкая система цен и скидки при длительной аренде</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4" data-aos="fade-left">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-3" style="color: var(--primary-color);">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <h5 class="card-title">Быстрое оформление</h5>
+                <p class="card-text text-muted">Забронируйте инвентарь онлайн за пару минут</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Призыв к действию -->
+<div class="row" data-aos="fade-up">
+    <div class="col-12">
+        <div class="card text-center" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+            <div class="card-body py-5">
+                <h2 class="fw-bold mb-3">Готовы начать?</h2>
+                <p class="lead mb-4">Зарегистрируйтесь и получите доступ к аренде инвентаря</p>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">
+                        Зарегистрироваться
+                    </a>
+                {% else %}
+                    <a href="{% url 'inventory:catalog' %}" class="btn btn-light btn-lg">
+                        Перейти в каталог
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

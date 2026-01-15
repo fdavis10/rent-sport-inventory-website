@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои заказы{% endblock %}
+
+{% block content %}
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-12">
+        <h1 class="fw-bold">
+            <i class="bi bi-bag-check"></i> Мои заказы
+        </h1>
+    </div>
+</div>
+
+{% if rentals %}
+<div class="row">
+    {% for rental in rentals %}
+    <div class="col-12 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:50 }}">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <h5 class="mb-1">Заказ №{{ rental.id }}</h5>
+                        <small class="text-muted">{{ rental.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <p class="mb-0">
+                            <i class="bi bi-calendar-range"></i> 
+                            {{ rental.start_date|date:"d.m.Y" }} - {{ rental.end_date|date:"d.m.Y" }}
+                        </p>
+                        <small class="text-muted">{{ rental.duration_days }} дн.</small>
+                    </div>
+
+                    <div class="col-md-2">
+                        {% if rental.status == 'PENDING' %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-clock"></i> {{ rental.get_status_display }}
+                            </span>
+                        {% elif rental.status == 'CONFIRMED' %}
+                            <span class="badge bg-info">
+                                <i class="bi bi-check"></i> {{ rental.get_status_display }}
+                            </span>
+                        {% elif rental.status == 'ACTIVE' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> {{ rental.get_status_display }}
+                            </span>
+                        {% elif rental.status == 'COMPLETED' %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-check-all"></i> {{ rental.get_status_display }}
+                            </span>
+                        {% elif rental.status == 'CANCELLED' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-x-circle"></i> {{ rental.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <p class="mb-0">
+                            <strong>Товаров:</strong> {{ rental.items.count }}
+                        </p>
+                    </div>
+
+                    <div class="col-md-2">
+                        <h5 class="text-primary mb-0">{{ rental.total_price }} ₽</h5>
+                    </div>
+
+                    <div class="col-md-1 text-end">
+                        <a href="{% url 'rentals:rental_detail' rental.id %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow text-center py-5" data-aos="fade-up">
+            <div class="card-body">
+                <i class="bi bi-bag-x text-muted" style="font-size: 5rem;"></i>
+                <h3 class="mt-4 mb-3">У вас пока нет заказов</h3>
+                <p class="text-muted mb-4">Оформите первый заказ в каталоге</p>
+                <a href="{% url 'inventory:catalog' %}" class="btn btn-primary">
+                    <i class="bi bi-grid"></i> Перейти в каталог
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

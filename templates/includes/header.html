@@ -1,0 +1,69 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'core:index' %}">
+            <i class="bi bi-snow"></i>
+            СпортАренда
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'core:index' %}">
+                        <i class="bi bi-house-door"></i> Главная
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'inventory:catalog' %}">
+                        <i class="bi bi-grid"></i> Каталог
+                    </a>
+                </li>
+                
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'rentals:my_rentals' %}">
+                            <i class="bi bi-bag-check"></i> Мои заказы
+                        </a>
+                    </li>
+                    
+                    {% if user.is_manager or user.is_admin_role or user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/">
+                                <i class="bi bi-gear"></i> Админка
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-person"></i> Профиль
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                                <i class="bi bi-box-arrow-right"></i> Выход
+                            </a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Вход
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-custom" href="{% url 'accounts:register' %}">
+                            Регистрация
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

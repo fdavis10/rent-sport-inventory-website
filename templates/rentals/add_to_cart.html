@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить в корзину - {{ equipment.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'inventory:catalog' %}">Каталог</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'inventory:equipment_detail' equipment.slug %}">{{ equipment.name }}</a></li>
+                <li class="breadcrumb-item active">Добавить в корзину</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow" data-aos="fade-up">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-cart-plus"></i> Добавить в корзину
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        {% if equipment.image %}
+                            <img src="{{ equipment.image.url }}" class="img-fluid rounded" alt="{{ equipment.name }}">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <h5 class="fw-bold">{{ equipment.name }}</h5>
+                        <p class="text-muted">{{ equipment.category.name }}</p>
+                        <p class="mb-2">
+                            <strong>Цена:</strong> 
+                            <span class="text-primary fs-5">{{ equipment.price_per_day }} ₽/день</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Доступно:</strong> {{ equipment.quantity_available }} шт.
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <form method="post" id="addToCartForm">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="quantity" class="form-label fw-bold">
+                                <i class="bi bi-123"></i> Количество
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="quantity" 
+                                   name="quantity" 
+                                   min="1" 
+                                   max="{{ equipment.quantity_available }}" 
+                                   value="1" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label fw-bold">
+                                <i class="bi bi-calendar-check"></i> Дата начала аренды
+                            </label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="start_date" 
+                                   name="start_date" 
+                                   value="{{ default_start|date:'Y-m-d' }}" 
+                                   min="{{ default_start|date:'Y-m-d' }}"
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label fw-bold">
+                                <i class="bi bi-calendar-x"></i> Дата окончания аренды
+                            </label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="end_date" 
+                                   name="end_date" 
+                                   value="{{ default_end|date:'Y-m-d' }}" 
+                                   min="{{ default_start|date:'Y-m-d' }}"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="card bg-light mb-4" id="costCalculator">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-calculator"></i> Расчёт стоимости
+                            </h5>
+                            <div id="calculatorContent">
+                                <p class="text-muted">Выберите даты для расчёта стоимости</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-cart-plus"></i> Добавить в корзину
+                        </button>
+                        <a href="{% url 'inventory:equipment_detail' equipment.slug %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantity');
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const calculatorContent = document.getElementById('calculatorContent');
+
+    function calculateCost() {
+        const quantity = quantityInput.value;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+
+        if (!quantity || !startDate || !endDate) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('equipment_id', '{{ equipment.id }}');
+        formData.append('quantity', quantity);
+        formData.append('start_date', startDate);
+        formData.append('end_date', endDate);
+
+        fetch('{% url "rentals:calculate_cost" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const cost = data.data;
+                let html = `
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-2"><strong>Цена за день:</strong></p>
+                            <p class="mb-2"><strong>Количество:</strong></p>
+                            <p class="mb-2"><strong>Дней аренды:</strong></p>
+                            <p class="mb-2"><strong>Промежуточный итог:</strong></p>
+                `;
+
+                if (cost.discount > 0) {
+                    html += `
+                            <p class="mb-2 text-success"><strong>Скидка (${cost.discount_percent.toFixed(0)}%):</strong></p>
+                    `;
+                }
+
+                html += `
+                            <p class="mb-0 fs-5"><strong>Итого:</strong></p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p class="mb-2">${cost.base_price} ₽</p>
+                            <p class="mb-2">${cost.quantity} шт.</p>
+                            <p class="mb-2">${cost.days} дн.</p>
+                            <p class="mb-2">${cost.subtotal} ₽</p>
+                `;
+
+                if (cost.discount > 0) {
+                    html += `
+                            <p class="mb-2 text-success">-${cost.discount} ₽</p>
+                    `;
+                }
+
+                html += `
+                            <p class="mb-0 fs-5 text-primary fw-bold">${cost.total} ₽</p>
+                        </div>
+                    </div>
+                `;
+
+                if (cost.discount > 0) {
+                    html += `
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="bi bi-gift"></i> Скидка ${cost.discount_percent.toFixed(0)}% за аренду от ${cost.days >= 7 ? '7' : '3'} дней!
+                        </div>
+                    `;
+                }
+
+                calculatorContent.innerHTML = html;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    quantityInput.addEventListener('input', calculateCost);
+    startDateInput.addEventListener('change', calculateCost);
+    endDateInput.addEventListener('change', calculateCost);
+
+    calculateCost();
+});
+</script>
+{% endblock %}

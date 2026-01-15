@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ equipment.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Изображение -->
+    <div class="col-lg-6 mb-4" data-aos="fade-right">
+        {% if equipment.image %}
+            <img src="{{ equipment.image.url }}" class="img-fluid rounded shadow" 
+                 alt="{{ equipment.name }}" 
+                 style="width: 100%; max-height: 500px; object-fit: cover;">
+        {% else %}
+            <div class="bg-light rounded shadow d-flex align-items-center justify-content-center" 
+                 style="width: 100%; height: 500px;">
+                <i class="bi bi-image text-muted" style="font-size: 8rem;"></i>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Информация о товаре -->
+    <div class="col-lg-6" data-aos="fade-left">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'inventory:catalog' %}">Каталог</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'inventory:catalog' %}?category={{ equipment.category.slug }}">{{ equipment.category.name }}</a></li>
+                <li class="breadcrumb-item active">{{ equipment.name }}</li>
+            </ol>
+        </nav>
+        
+        <span class="badge bg-primary mb-3">{{ equipment.category.name }}</span>
+        
+        <h1 class="fw-bold mb-3">{{ equipment.name }}</h1>
+        
+        <div class="mb-4">
+            {% if equipment.is_available %}
+                <span class="badge bg-success fs-6">
+                    <i class="bi bi-check-circle"></i> В наличии: {{ equipment.quantity_available }} шт.
+                </span>
+            {% else %}
+                <span class="badge bg-danger fs-6">
+                    <i class="bi bi-x-circle"></i> Нет в наличии
+                </span>
+            {% endif %}
+        </div>
+        
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h2 class="text-primary mb-0">
+                    {{ equipment.price_per_day }} ₽
+                    <small class="text-muted fs-6">/день</small>
+                </h2>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-info-circle"></i> Характеристики
+                </h5>
+                <ul class="list-unstyled">
+                    {% if equipment.brand %}
+                        <li class="mb-2">
+                            <strong>Бренд:</strong> {{ equipment.brand }}
+                        </li>
+                    {% endif %}
+                    {% if equipment.model %}
+                        <li class="mb-2">
+                            <strong>Модель:</strong> {{ equipment.model }}
+                        </li>
+                    {% endif %}
+                    <li class="mb-2">
+                        <strong>Размер:</strong> {{ equipment.size }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>Состояние:</strong> 
+                        <span class="badge bg-secondary">{{ equipment.get_condition_display }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if equipment.is_available %}
+            <a href="{% url 'rentals:add_to_cart' equipment.id %}" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="bi bi-cart-plus"></i> Добавить в корзину
+            </a>
+        {% else %}
+            <button class="btn btn-secondary btn-lg w-100 mb-3" disabled>
+                <i class="bi bi-x-circle"></i> Недоступно для аренды
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Описание -->
+<div class="row mt-5" data-aos="fade-up">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="fw-bold mb-3">
+                    <i class="bi bi-file-text"></i> Описание
+                </h4>
+                <p>{{ equipment.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Похожие товары -->
+{% if similar_equipment %}
+<div class="row mt-5">
+    <div class="col-12 mb-4" data-aos="fade-up">
+        <h3 class="fw-bold">
+            <i class="bi bi-grid"></i> Похожие товары
+        </h3>
+    </div>
+    
+    {% for item in similar_equipment %}
+        <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+            <div class="card h-100 shadow-sm">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" 
+                         alt="{{ item.name }}" 
+                         style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                         style="height: 200px;">
+                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h6 class="card-title">{{ item.name }}</h6>
+                    <p class="text-primary fw-bold mb-2">
+                        {{ item.price_per_day }} ₽ <small class="text-muted">/день</small>
+                    </p>
+                    <a href="{% url 'inventory:equipment_detail' item.slug %}" class="btn btn-sm btn-outline-primary w-100">
+                        Подробнее
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

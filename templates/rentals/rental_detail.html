@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ №{{ rental.id }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'rentals:my_rentals' %}">Мои заказы</a></li>
+                <li class="breadcrumb-item active">Заказ №{{ rental.id }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="fw-bold mb-0">
+                <i class="bi bi-receipt"></i> Заказ №{{ rental.id }}
+            </h1>
+            
+            {% if rental.status == 'PENDING' %}
+                <span class="badge bg-warning fs-6">
+                    <i class="bi bi-clock"></i> {{ rental.get_status_display }}
+                </span>
+            {% elif rental.status == 'CONFIRMED' %}
+                <span class="badge bg-info fs-6">
+                    <i class="bi bi-check"></i> {{ rental.get_status_display }}
+                </span>
+            {% elif rental.status == 'ACTIVE' %}
+                <span class="badge bg-success fs-6">
+                    <i class="bi bi-check-circle"></i> {{ rental.get_status_display }}
+                </span>
+            {% elif rental.status == 'COMPLETED' %}
+                <span class="badge bg-secondary fs-6">
+                    <i class="bi bi-check-all"></i> {{ rental.get_status_display }}
+                </span>
+            {% elif rental.status == 'CANCELLED' %}
+                <span class="badge bg-danger fs-6">
+                    <i class="bi bi-x-circle"></i> {{ rental.get_status_display }}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-lg-8 mb-4">
+
+        <div class="card shadow-sm mb-4" data-aos="fade-right">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Информация о заказе
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Дата создания:</strong></p>
+                        <p class="text-muted">{{ rental.created_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Дата обновления:</strong></p>
+                        <p class="text-muted">{{ rental.updated_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Период аренды:</strong></p>
+                        <p class="text-muted">
+                            {{ rental.start_date|date:"d.m.Y" }} - {{ rental.end_date|date:"d.m.Y" }}
+                            <br>
+                            <small>({{ rental.duration_days }} дн.)</small>
+                        </p>
+                    </div>
+                    {% if rental.confirmed_by %}
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Подтвердил:</strong></p>
+                        <p class="text-muted">{{ rental.confirmed_by.get_full_name }}</p>
+                    </div>
+                    {% endif %}
+                    {% if rental.comment %}
+                    <div class="col-12">
+                        <p class="mb-1"><strong>Комментарий:</strong></p>
+                        <p class="text-muted">{{ rental.comment }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm" data-aos="fade-right" data-aos-delay="100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-box-seam"></i> Товары в заказе
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for item in rental.items.all %}
+                <div class="row align-items-center mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="col-md-2">
+                        {% if item.equipment.image %}
+                            <img src="{{ item.equipment.image.url }}" 
+                                 class="img-fluid rounded" 
+                                 alt="{{ item.equipment.name }}"
+                                 style="max-height: 80px;">
+                        {% else %}
+                            <div class="bg-light rounded" style="height: 80px;"></div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-5">
+                        <h6 class="mb-1">
+                            <a href="{% url 'inventory:equipment_detail' item.equipment.slug %}">
+                                {{ item.equipment.name }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">{{ item.equipment.category.name }}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-0">
+                            <strong>Цена:</strong> {{ item.price_per_day }} ₽/день<br>
+                            <strong>Количество:</strong> {{ item.quantity }} шт.<br>
+                            <strong>Дней:</strong> {{ item.days }}
+                        </p>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <strong class="text-primary">{{ item.subtotal }} ₽</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Итого -->
+    <div class="col-lg-4">
+        <div class="card shadow sticky-top" style="top: 20px;" data-aos="fade-left">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-cash-coin"></i> Итого
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Товаров:</span>
+                        <strong>{{ rental.items.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Период:</span>
+                        <strong>{{ rental.duration_days }} дн.</strong>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between mb-4">
+                    <h4 class="mb-0">К оплате:</h4>
+                    <h4 class="mb-0 text-success">{{ rental.total_price }} ₽</h4>
+                </div>
+
+                <a href="{% url 'rentals:my_rentals' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left"></i> Назад к заказам
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
