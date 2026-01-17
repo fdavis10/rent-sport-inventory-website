@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sports_rental_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: sports_rental_db
+      POSTGRES_USER: sports_user
+      POSTGRES_PASSWORD: Sports2024!
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    container_name: sports_rental_web
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py seed_data &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "True"
+      DB_NAME: sports_rental_db
+      DB_USER: sports_user
+      DB_PASSWORD: Sports2024!
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
