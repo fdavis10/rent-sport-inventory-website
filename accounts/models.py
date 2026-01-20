@@ -34,6 +34,7 @@ class User(AbstractUser):
     )
 
     address = models.CharField(
+        max_length=255,
         blank=True,
         verbose_name='Адрес',
     )

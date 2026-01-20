@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: sports_user
       POSTGRES_PASSWORD: Sports2024!
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sports_user -d sports_rental_db"]
       interval: 2s

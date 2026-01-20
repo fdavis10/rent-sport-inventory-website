@@ -1,0 +1,1 @@
+print(for char in 'maria i love u')
