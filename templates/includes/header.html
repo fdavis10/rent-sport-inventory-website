@@ -24,6 +24,15 @@
                 
                 {% if user.is_authenticated %}
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'rentals:cart' %}">
+                            <i class="bi bi-cart"></i> Корзина
+                            {% if cart_total_items and cart_total_items > 0 %}
+                                <span class="badge bg-light text-dark ms-1">{{ cart_total_items }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'rentals:my_rentals' %}">
                             <i class="bi bi-bag-check"></i> Мои заказы
                         </a>
