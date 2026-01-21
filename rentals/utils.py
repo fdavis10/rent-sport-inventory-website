@@ -1,3 +1,6 @@
+"""
+Логика управления корзиной и расчёта стоимости аренды оборудования
+"""
 from decimal import Decimal
 from datetime import date, timedelta
 from .models import Cart, CartItem
@@ -20,12 +23,16 @@ def add_to_cart(user, equipment, quantity, start_date, end_date):
     if end_date <= start_date:
         return False, "Дата окончания должна быть позже даты начала"
     
+    # Рассчитываем скидку
+    cost_info = calculate_rental_cost(equipment, quantity, start_date, end_date)
+    discount = cost_info['discount']
+    
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
         equipment=equipment,
         start_date=start_date,
         end_date=end_date,
-        defaults={'quantity': quantity}
+        defaults={'quantity': quantity, 'discount': discount}
     )
     
     if not created:
@@ -33,6 +40,9 @@ def add_to_cart(user, equipment, quantity, start_date, end_date):
         if new_quantity > equipment.quantity_available:
             return False, "Превышено доступное количество"
         cart_item.quantity = new_quantity
+        # Пересчитываем скидку с новым количеством
+        cost_info = calculate_rental_cost(equipment, new_quantity, start_date, end_date)
+        cart_item.discount = cost_info['discount']
         cart_item.save()
     
     return True, "Товар добавлен в корзину"
@@ -61,6 +71,9 @@ def update_cart_item(user, cart_item_id, quantity):
             return False, "Превышено доступное количество"
         
         cart_item.quantity = quantity
+        # Пересчитываем скидку с новым количеством
+        cost_info = calculate_rental_cost(cart_item.equipment, quantity, cart_item.start_date, cart_item.end_date)
+        cart_item.discount = cost_info['discount']
         cart_item.save()
         return True, "Количество обновлено"
     except CartItem.DoesNotExist:
