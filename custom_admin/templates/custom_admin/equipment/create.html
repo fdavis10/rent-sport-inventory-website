@@ -1,0 +1,185 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block title %}Добавить инвентарь{% endblock %}
+{% block page_title %}Добавить инвентарь{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow" data-aos="fade-up">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-circle"></i> Новый инвентарь
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+
+                    <div class="mb-3">
+                        <label for="category" class="form-label fw-bold">
+                            <i class="bi bi-tag"></i> Категория *
+                        </label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">-- Выберите категорию --</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-bold">
+                            <i class="bi bi-box"></i> Название *
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               placeholder="Например: Горные лыжи Head Kore 93"
+                               required>
+                    </div>
+                    
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-bold">
+                            <i class="bi bi-file-text"></i> Описание *
+                        </label>
+                        <textarea class="form-control" 
+                                  id="description" 
+                                  name="description" 
+                                  rows="4"
+                                  placeholder="Подробное описание товара..."
+                                  required></textarea>
+                    </div>
+                    
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label for="brand" class="form-label fw-bold">
+                                <i class="bi bi-award"></i> Бренд
+                            </label>
+                            <input type="text" class="form-control" id="brand" name="brand" placeholder="Head">
+                        </div>
+                        
+
+                        <div class="col-md-6 mb-3">
+                            <label for="model" class="form-label fw-bold">
+                                <i class="bi bi-tag-fill"></i> Модель
+                            </label>
+                            <input type="text" class="form-control" id="model" name="model" placeholder="Kore 93">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label for="size" class="form-label fw-bold">
+                                <i class="bi bi-rulers"></i> Размер *
+                            </label>
+                            <input type="text" class="form-control" id="size" name="size" placeholder="170 см" required>
+                        </div>
+                        
+
+                        <div class="col-md-6 mb-3">
+                            <label for="condition" class="form-label fw-bold">
+                                <i class="bi bi-star"></i> Состояние *
+                            </label>
+                            <select class="form-select" id="condition" name="condition" required>
+                                {% for value, label in conditions %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <label for="price_per_day" class="form-label fw-bold">
+                                <i class="bi bi-cash"></i> Цена/день (₽) *
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="price_per_day" 
+                                   name="price_per_day" 
+                                   min="0" 
+                                   step="0.01"
+                                   placeholder="1500"
+                                   required>
+                        </div>
+                        
+
+                        <div class="col-md-4 mb-3">
+                            <label for="quantity_total" class="form-label fw-bold">
+                                <i class="bi bi-box-seam"></i> Всего единиц *
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="quantity_total" 
+                                   name="quantity_total" 
+                                   min="1"
+                                   placeholder="5"
+                                   required>
+                        </div>
+                        
+
+                        <div class="col-md-4 mb-3">
+                            <label for="quantity_available" class="form-label fw-bold">
+                                <i class="bi bi-check-circle"></i> Доступно *
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="quantity_available" 
+                                   name="quantity_available" 
+                                   min="0"
+                                   placeholder="5"
+                                   required>
+                        </div>
+                    </div>
+                    
+
+                    <div class="mb-3">
+                        <label for="image" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Изображение *
+                        </label>
+                        <input type="file" 
+                               class="form-control" 
+                               id="image" 
+                               name="image"
+                               accept="image/*"
+                               required>
+                        <small class="text-muted">Рекомендуемый размер: 800x600px</small>
+                    </div>
+                    
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="is_active" 
+                                   name="is_active"
+                                   checked>
+                            <label class="form-check-label fw-bold" for="is_active">
+                                <i class="bi bi-check-circle"></i> Товар активен
+                            </label>
+                        </div>
+                    </div>
+                    
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-check-circle"></i> Создать инвентарь
+                        </button>
+                        <a href="{% url 'custom_admin:equipment_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

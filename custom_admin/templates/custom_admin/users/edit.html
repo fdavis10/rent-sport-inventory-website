@@ -1,0 +1,161 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block title %}Редактировать пользователя{% endblock %}
+{% block page_title %}Редактировать пользователя{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow" data-aos="fade-up">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil"></i> Редактирование пользователя
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Информация о пользователе -->
+                <div class="text-center mb-4 pb-4 border-bottom">
+                    {% if edited_user.avatar %}
+                        <img src="{{ edited_user.avatar.url }}" 
+                             class="rounded-circle mb-3" 
+                             style="width: 100px; height: 100px; object-fit: cover;"
+                             alt="{{ edited_user.get_full_name }}">
+                    {% else %}
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 100px; height: 100px; font-size: 2.5rem;">
+                            <i class="bi bi-person"></i>
+                        </div>
+                    {% endif %}
+                    <h4 class="mb-1">{{ edited_user.get_full_name }}</h4>
+                    <p class="text-muted mb-0">@{{ edited_user.username }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Имя -->
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label fw-bold">
+                                <i class="bi bi-person"></i> Имя *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   value="{{ edited_user.first_name }}"
+                                   required>
+                        </div>
+                        
+                        <!-- Фамилия -->
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label fw-bold">
+                                <i class="bi bi-person-fill"></i> Фамилия *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name" 
+                                   value="{{ edited_user.last_name }}"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-bold">
+                            <i class="bi bi-envelope"></i> Email *
+                        </label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="email" 
+                               name="email" 
+                               value="{{ edited_user.email }}"
+                               required>
+                    </div>
+                    
+                    <!-- Роль -->
+                    <div class="mb-3">
+                        <label for="role" class="form-label fw-bold">
+                            <i class="bi bi-shield"></i> Роль *
+                        </label>
+                        <select class="form-select" id="role" name="role" required>
+                            {% for value, label in role_choices %}
+                                <option value="{{ value }}" {% if edited_user.role == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            ADMIN - полный доступ, MANAGER - только заказы, CLIENT - обычный пользователь
+                        </small>
+                    </div>
+                    
+                    <!-- Активность -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="is_active" 
+                                   name="is_active"
+                                   {% if edited_user.is_active %}checked{% endif %}>
+                            <label class="form-check-label fw-bold" for="is_active">
+                                <i class="bi bi-check-circle"></i> Пользователь активен
+                            </label>
+                        </div>
+                        <small class="text-muted">Неактивные пользователи не могут войти в систему</small>
+                    </div>
+                    
+                    <!-- Кнопки -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-check-circle"></i> Сохранить изменения
+                        </button>
+                        <a href="{% url 'custom_admin:users_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Статистика пользователя -->
+        <div class="card shadow mt-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-graph-up"></i> Статистика пользователя
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h4 class="text-primary">{{ edited_user.rentals.count }}</h4>
+                        <small class="text-muted">Всего заказов</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-success">
+                            {% with edited_user.rentals.all as all_rentals %}
+                                {{ all_rentals|length }}
+                            {% endwith %}
+                        </h4>
+                        <small class="text-muted">История заказов</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-info">{{ edited_user.created_at|date:"d.m.Y" }}</h4>
+                        <small class="text-muted">Дата регистрации</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Предупреждение -->
+        {% if edited_user == user %}
+        <div class="alert alert-warning mt-4" data-aos="fade-up" data-aos-delay="200">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Внимание!</strong> Вы редактируете свой собственный аккаунт. Будьте осторожны при изменении роли.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

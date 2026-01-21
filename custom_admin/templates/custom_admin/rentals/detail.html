@@ -1,0 +1,215 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block title %}Заказ №{{ rental.id }}{% endblock %}
+{% block page_title %}Заказ №{{ rental.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+
+    <div class="col-lg-8 mb-4">
+
+        <div class="card mb-4" data-aos="fade-right">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Информация о заказе
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1 text-muted"><strong>Дата создания:</strong></p>
+                        <p>{{ rental.created_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1 text-muted"><strong>Дата обновления:</strong></p>
+                        <p>{{ rental.updated_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1 text-muted"><strong>Клиент:</strong></p>
+                        <p>
+                            {{ rental.user.get_full_name }}
+                            <br>
+                            <small>{{ rental.user.email }}</small>
+                            {% if rental.user.phone_number %}
+                                <br>
+                                <small>{{ rental.user.phone_number }}</small>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1 text-muted"><strong>Период аренды:</strong></p>
+                        <p>
+                            {{ rental.start_date|date:"d.m.Y" }} - {{ rental.end_date|date:"d.m.Y" }}
+                            <br>
+                            <small class="text-primary">({{ rental.duration_days }} дн.)</small>
+                        </p>
+                    </div>
+                    {% if rental.confirmed_by %}
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1 text-muted"><strong>Подтвердил:</strong></p>
+                        <p>
+                            {{ rental.confirmed_by.get_full_name }}
+                            <br>
+                            <small>{{ rental.confirmed_at|date:"d.m.Y H:i" }}</small>
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if rental.comment %}
+                    <div class="col-12">
+                        <p class="mb-1 text-muted"><strong>Комментарий клиента:</strong></p>
+                        <p class="border-start border-primary border-3 ps-3 bg-light p-2 rounded">
+                            {{ rental.comment }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card" data-aos="fade-right" data-aos-delay="100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-box-seam"></i> Товары в заказе
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Товар</th>
+                                <th>Цена/день</th>
+                                <th>Кол-во</th>
+                                <th>Дней</th>
+                                <th>Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in rental_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.equipment.image %}
+                                            <img src="{{ item.equipment.image.url }}" 
+                                                 class="rounded me-3" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;"
+                                                 alt="{{ item.equipment.name }}">
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ item.equipment.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ item.equipment.category.name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.price_per_day }} ₽</td>
+                                <td>{{ item.quantity }} шт.</td>
+                                <td>{{ item.days }} дн.</td>
+                                <td><strong>{{ item.subtotal }} ₽</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="4" class="text-end"><strong>Итого:</strong></td>
+                                <td><strong class="text-primary fs-5">{{ rental.total_price }} ₽</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-lg-4">
+        <div class="card shadow sticky-top" style="top: 20px;" data-aos="fade-left">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear"></i> Управление
+                </h5>
+            </div>
+            <div class="card-body">
+
+                <div class="mb-4">
+                    <p class="mb-2"><strong>Текущий статус:</strong></p>
+                    {% if rental.status == 'PENDING' %}
+                        <span class="badge bg-warning fs-6">
+                            <i class="bi bi-clock"></i> {{ rental.get_status_display }}
+                        </span>
+                    {% elif rental.status == 'CONFIRMED' %}
+                        <span class="badge bg-info fs-6">
+                            <i class="bi bi-check"></i> {{ rental.get_status_display }}
+                        </span>
+                    {% elif rental.status == 'ACTIVE' %}
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-check-circle"></i> {{ rental.get_status_display }}
+                        </span>
+                    {% elif rental.status == 'COMPLETED' %}
+                        <span class="badge bg-secondary fs-6">
+                            <i class="bi bi-check-all"></i> {{ rental.get_status_display }}
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">
+                            <i class="bi bi-x-circle"></i> {{ rental.get_status_display }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <hr>
+
+
+                <form method="post" action="{% url 'custom_admin:rental_update_status' rental.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-arrow-repeat"></i> Изменить статус:
+                        </label>
+                        <select name="status" class="form-select" required>
+                            <option value="">-- Выберите статус --</option>
+                            <option value="PENDING" {% if rental.status == 'PENDING' %}selected{% endif %}>
+                                Ожидает подтверждения
+                            </option>
+                            <option value="CONFIRMED" {% if rental.status == 'CONFIRMED' %}selected{% endif %}>
+                                Подтверждён
+                            </option>
+                            <option value="ACTIVE" {% if rental.status == 'ACTIVE' %}selected{% endif %}>
+                                Активная аренда
+                            </option>
+                            <option value="COMPLETED" {% if rental.status == 'COMPLETED' %}selected{% endif %}>
+                                Завершён
+                            </option>
+                            <option value="CANCELLED" {% if rental.status == 'CANCELLED' %}selected{% endif %}>
+                                Отменён
+                            </option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 mb-3">
+                        <i class="bi bi-check-circle"></i> Сохранить статус
+                    </button>
+                </form>
+
+                <a href="{% url 'custom_admin:rentals_list' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left"></i> К списку заказов
+                </a>
+
+
+                <div class="alert alert-info mt-4 mb-0">
+                    <small>
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Подсказка:</strong>
+                        <ul class="mb-0 mt-2 ps-3">
+                            <li><strong>PENDING</strong> → <strong>CONFIRMED</strong> - подтверждение заказа</li>
+                            <li><strong>CONFIRMED</strong> → <strong>ACTIVE</strong> - начало аренды</li>
+                            <li><strong>ACTIVE</strong> → <strong>COMPLETED</strong> - завершение аренды</li>
+                        </ul>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

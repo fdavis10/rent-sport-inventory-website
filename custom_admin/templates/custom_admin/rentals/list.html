@@ -1,0 +1,140 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block title %}Управление заказами{% endblock %}
+{% block page_title %}Управление заказами{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4" data-aos="fade-up">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-search"></i> Поиск
+                </label>
+                <input type="text" 
+                       name="search" 
+                       class="form-control" 
+                       placeholder="№ заказа, клиент, email..." 
+                       value="{{ search_query }}">
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-funnel"></i> Статус
+                </label>
+                <select name="status" class="form-select">
+                    <option value="">Все статусы</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-check"></i> Применить
+                </button>
+                <a href="{% url 'custom_admin:rentals_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="card" data-aos="fade-up" data-aos-delay="100">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-list-ul"></i> Список заказов ({{ rentals.count }})
+            </h5>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>№ Заказа</th>
+                        <th>Клиент</th>
+                        <th>Дата создания</th>
+                        <th>Период аренды</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rental in rentals %}
+                    <tr>
+                        <td>
+                            <strong class="text-primary">#{{ rental.id }}</strong>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ rental.user.get_full_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ rental.user.email }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {{ rental.created_at|date:"d.m.Y H:i" }}
+                        </td>
+                        <td>
+                            <small>
+                                {{ rental.start_date|date:"d.m.Y" }} - {{ rental.end_date|date:"d.m.Y" }}
+                                <br>
+                                <span class="text-muted">({{ rental.duration_days }} дн.)</span>
+                            </small>
+                        </td>
+                        <td>
+                            <strong>{{ rental.total_price }} ₽</strong>
+                        </td>
+                        <td>
+                            {% if rental.status == 'PENDING' %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-clock"></i> {{ rental.get_status_display }}
+                                </span>
+                            {% elif rental.status == 'CONFIRMED' %}
+                                <span class="badge bg-info">
+                                    <i class="bi bi-check"></i> {{ rental.get_status_display }}
+                                </span>
+                            {% elif rental.status == 'ACTIVE' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> {{ rental.get_status_display }}
+                                </span>
+                            {% elif rental.status == 'COMPLETED' %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-check-all"></i> {{ rental.get_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> {{ rental.get_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'custom_admin:rental_detail' rental.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Открыть
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Заказы не найдены</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

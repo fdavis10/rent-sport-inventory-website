@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'inventory',
     'rentals',
     'core',
+    'custom_admin',
 ]
 
 MIDDLEWARE = [
@@ -99,12 +100,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'rent_sport_inventory',
-        'USER': 'sportsinventory',
-        'PASSWORD': 'password123',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sportsite-local',
+        'USER': 'sportsite-admin-local',
+        'PASSWORD': '123',
         'HOST': 'localhost',
-        'PORT': '3306',
+        'PORT': '5432',
     }
 }
 
