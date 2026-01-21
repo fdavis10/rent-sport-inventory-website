@@ -259,6 +259,14 @@ class CartItem(models.Model):
         verbose_name='Дата окончания аренды'
     )
     
+    discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name='Скидка (руб.)'
+    )
+    
     added_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата добавления'
@@ -278,4 +286,5 @@ class CartItem(models.Model):
     
     @property
     def subtotal(self):
-        return self.equipment.price_per_day * self.quantity * self.days
+        base_price = self.equipment.price_per_day * self.quantity * self.days
+        return base_price - self.discount

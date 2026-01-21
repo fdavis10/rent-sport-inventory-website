@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'unfold.contrib.filters',
     'unfold.contrib.forms',
 
+    # fix problem with accounts app 
+    'accounts',
+
     # django apps
     'django.contrib.admin',
     'django.contrib.auth',
@@ -54,7 +57,6 @@ INSTALLED_APPS = [
 
     # other local apps
     'inventory',
-    'accounts',
     'rentals',
     'core',
 ]
@@ -83,6 +85,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rentals.context_processors.cart_context',
             ],
         },
     },
@@ -96,12 +99,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'sports-inventory-db'),
-        'USER': os.getenv('DB_USER', 'sportsinvenotory-admin'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'sportinventorypass'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'rent_sport_inventory',
+        'USER': 'sportsinventory',
+        'PASSWORD': 'password123',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
